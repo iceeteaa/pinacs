@@ -1,0 +1,38 @@
+#!/bin/bash
+
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+ROOT_DIR=`realpath $SCRIPT_DIR`
+
+MAC_LIST_FILE=$ROOT_DIR/mac_list
+IP_LIST_FILE=$ROOT_DIR/ip_list
+
+DEFAULT_DEV="en0"
+DEFAULT_IP_PATTERN="192.168.0.0/24"
+
+FULL_IP_LIST=''
+IP_LIST=''
+
+
+get_ip_list() {
+    while IFS= read -r line
+    do
+        dev_name="$(awk '{print $1}' <<< $line)"
+        mac_addr="$(awk '{print $2}' <<< $line)"
+
+        ip="$(echo "$FULL_IP_LIST" | grep $mac_addr | awk '{print $1}')"
+        if [ ! -z $ip ]; then
+            IP_LIST+="export ""$dev_name"_ip="$ip""\n"
+        fi
+
+    done < "$MAC_LIST_FILE"
+
+    echo -e $IP_LIST > $IP_LIST_FILE
+}
+
+FULL_IP_LIST="$(sudo arp-scan -I $DEFAULT_DEV 192.168.1.0/24)"
+get_ip_list
+
+cat $IP_LIST_FILE
+source $IP_LIST_FILE
+
+
