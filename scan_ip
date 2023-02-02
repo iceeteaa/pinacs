@@ -1,13 +1,11 @@
 #!/bin/bash
 
-SCRIPT_DIR="$(dirname "$(realpath "$0")")"
-ROOT_DIR=`realpath $SCRIPT_DIR`
+ROOT_DIR="$(dirname "$(realpath "$0")")"
 
 MAC_LIST_FILE=$ROOT_DIR/mac_list
 IP_LIST_FILE=$ROOT_DIR/ip_list
 
 DEFAULT_DEV="en0"
-DEFAULT_IP_PATTERN="192.168.0.0/24"
 
 FULL_IP_LIST=''
 IP_LIST=''
@@ -17,10 +15,12 @@ get_ip_list() {
     while IFS= read -r line
     do
         dev_name="$(awk '{print $1}' <<< $line)"
-        mac_addr="$(awk '{print $2}' <<< $line)"
+        user_name="$(awk '{print $2}' <<< $line)"
+        mac_addr="$(awk '{print $3}' <<< $line)"
 
         ip="$(echo "$FULL_IP_LIST" | grep $mac_addr | awk '{print $1}')"
         if [ ! -z $ip ]; then
+            IP_LIST+="export ""$dev_name"_ndev="$user_name@$ip""\n"
             IP_LIST+="export ""$dev_name"_ip="$ip""\n"
         fi
 
